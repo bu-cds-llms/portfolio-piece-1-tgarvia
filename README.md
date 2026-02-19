@@ -1,82 +1,228 @@
-[![Review Assignment Due Date](https://classroom.github.com/assets/deadline-readme-button-22041afd0340ce965d47ae6ef1cefeee28c7c493a6346c4f15d667ab976d596c.svg)](https://classroom.github.com/a/brKTKdOU)
-# Portfolio Piece Assignment
+# Sentiment Classification on IMDB: Classical vs Neural Models
+## Overview
 
-This repository is a template for your portfolio piece. You'll build on your weekly labs to create a polished, well-documented project that demonstrates your understanding of the concepts we've covered.
+This project compares classical machine learning approaches and lightweight neural networks for binary sentiment classification on a balanced subset of the IMDB movie review dataset.
 
-## What You're Building
+The objective is to analyze performance differences between feature-based linear models (TF-IDF + SVM/LogReg/NB) and representation-learning neural baselines (embedding averaging and attention pooling), and to critically evaluate their trade-offs.
 
-Your portfolio piece could be a Jupyter notebook (or set of notebooks), or another reporting format (PDF with embedded images, etc.) that:
-- Demonstrates understanding of course concepts
-- Includes working, well-documented code (in notebooks or imported scripts)
-- Analyzes results critically
-- Tells a clear story from problem/question to approach to results and insights
+## Dataset
 
-If you'd like, this can become part of your professional portfolio, so treat it as work you'd be proud to show a potential employer or collaborator.
+We use a balanced subset of the IMDB dataset containing:
 
-## Grading
+- 5,000 movie reviews
 
-Your work will be evaluated on:
-- **Conceptual Understanding** (5 pts): Do you explain *why* you chose specific methods? Do you connect to course material?
-- **Technical Implementation** (5 pts): Does your code run without errors? Do all components work correctly?
-- **Code Quality & Documentation** (5 pts): Is your notebook/code clear and well-organized? Does it tell a story?
-- **Critical Analysis** (5 pts): Do you interpret results thoughtfully? Discuss limitations and tradeoffs?
-- **Peer Reviews** (5 pts): Did you provide constructive feedback on two classmates' projects?
+- 2,500 positive reviews
 
-See the full [rubric](https://lauren897.github.io/cds593-private/rubrics.html#portfolio-piece-rubric) for details.
+- 2,500 negative reviews
 
-## Suggested Repository Structure
+The data is split into:
 
-You're free to organize this however makes sense for your project, but here's a structure that works well:
+- 70% Training
 
+- 10% Validation
+
+- 20% Test
+
+Validation is used exclusively for hyperparameter tuning. The test set is used only once for final evaluation to avoid data leakage.
+
+## How to Obtain the Dataset
+
+Download the IMDB dataset from:
+
+https://ai.stanford.edu/~amaas/data/sentiment/
+
+After downloading, place the extracted data inside a data/ directory at the root of the repository.
+
+The data/ folder is excluded from version control.
+
+## Methods
+### 1. Classical Baselines
+
+We evaluate the following feature representations:
+
+- Bag-of-Words (unigrams)
+
+- TF-IDF (unigrams + bigrams)
+
+Models tested:
+
+- Naive Bayes
+
+- Logistic Regression
+
+- Linear SVM
+
+Hyperparameters are selected using validation accuracy.
+
+The best classical configuration:
+
+**Linear SVM + TF-IDF (1,2), k=20000 features**
+
+### 2. Neural Baselines
+
+Two lightweight PyTorch models were implemented:
+
+**Average Embedding Classifier**
+
+- Learns token embeddings
+
+- Averages non-padding embeddings
+
+- Applies linear classification
+
+**Self-Attention Pooling Classifier**
+
+- Learns a global query vector
+
+- Computes attention scores over tokens
+
+- Produces a weighted document representation
+
+- Provides interpretable attention weights
+
+Neural models are trained with validation-based early stopping.
+
+## Results
+| Model	| Test Accuracy |
+| :--- | :---|
+| SVM + TF-IDF (1,2) | 0.919 |
+| AvgEmb (Neural) | 0.881 |
+| Attention Pooling (Neural) | 0.867 |
+
+The classical SVM model outperforms both neural baselines.
+
+Confusion matrix analysis shows balanced performance across classes, with similar false positive and false negative rates.
+
+## Analysis
+
+TF-IDF with bigrams performs strongly because sentiment classification relies heavily on lexical signals and short phrases (e.g., “not good”, “highly recommend”). Linear SVMs are well suited to high-dimensional sparse representations.
+
+The neural models learn embeddings from scratch on a relatively small dataset (5k reviews). Without pretrained embeddings and large-scale training, they struggle to surpass strong feature-engineered baselines.
+
+Although the attention pooling model provides token-level interpretability, it does not improve performance over simple embedding averaging in this experiment. This suggests that, given the small dataset and limited training, learning token importance alone is not sufficient to outperform strong lexical baselines.
+
+The lack of improvement from attention pooling highlights that architectural complexity alone does not guarantee better performance. Without sufficient data or sequence modeling capacity, additional parameters may not translate into meaningful gains.
+
+This experiment illustrates the bias–variance trade-off:
+
+- Linear models impose stronger inductive bias and generalize well with limited data.
+
+- Neural models offer higher representational capacity but require more data and tuning.
+
+## Limitations
+
+- Small dataset for training neural embeddings
+
+- No pretrained embeddings
+
+- Limited number of training epochs
+
+- Attention pooling does not capture token interactions
+
+- Simple tokenization (no subword modeling)
+
+## Future Work
+
+- Train on the full IMDB dataset
+
+- Incorporate pretrained embeddings (e.g., GloVe)
+
+- Experiment with sequence models (CNN, LSTM, Transformer encoder)
+
+- Perform broader hyperparameter search
+
+- Analyze calibration and robustness
+
+## How to Run
+This project was developed and tested using Visual Studio Code with a Python virtual environment.
+
+**1. Clone the Repository**
+```bash
+git clone https://github.com/bu-cds-llms/portfolio-piece-1-tgarvia.git
+cd portfolio-piece-1-tgarvia
+```
+
+**2. Create and Activate Virtual Environment**
+```bash
+python -m venv .venv
+source .venv/bin/activate # macOS / Linux / WSL
+```
+
+On Windows:
+```powershell
+.\.venv\Scripts\activate
+```
+
+**3. Install Dependencies**
+```bash
+pip install -r requirements.txt
+```
+
+If using an NVIDIA RTX 50xx GPU:
+
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu128
+```
+
+**4. Open in VS Code**
+```bash
+code .
+```
+
+Make sure to:
+
+- Install the Python extension (Microsoft)
+
+- Install the Jupyter extension (Microsoft)
+
+- Select the `.venv` interpreter:
+
+    - Press `Ctrl+Shift+P`
+
+    - Choose **Python: Select Interpreter**
+
+    - Select `.venv`
+
+**5. Run the Notebook**
+
+Open:
+```
+notebooks/main_analysis.ipynb
+```
+
+Select the `.venv` kernel and click **Run All**.
+
+## Requirements
+
+Key dependencies:
+
+- torch
+
+- scikit-learn
+
+- pandas
+
+- matplotlib
+
+- tqdm
+
+See `requirements.txt` for exact versions.
+
+Repository Structure
 ```
 your-portfolio-piece/
-├── README.md (this file - update it with your project details)
-├── requirements.txt or equivalent
+├── README.md
+├── requirements.txt
 ├── notebooks/
-│   └── main_analysis.ipynb (or multiple notebooks)
-├── src/ (optional - if you refactor code into modules)
-├── data/ (see note below about data)
-├── outputs/ (figures, saved models, etc.)
+│   └── main_analysis.ipynb
+├── src/
+├── outputs/
+└── data/  (not tracked)
 ```
 
-**About data**: If your dataset is small (<10 MB), you can include it in the repo. For larger datasets, put instructions in your README for how to download/access it, and add data files to `.gitignore`.
+## Teresa Garvia Gallego
 
-## Writing a Good README
+Portfolio Piece – Sentiment Classification
+Boston University
 
-Once you've completed your project, update this README to include:
-
-1. **Project Title** - make it descriptive
-2. **Overview** - 2-3 sentences: what problem are you solving and why?
-3. **Methods** - what approaches did you use? Why these choices?
-4. **Key Results** - what did you find? (keep it brief, details go in the notebook)
-5. **How to Run** - step-by-step instructions so someone can reproduce your work
-6. **Requirements** - what packages/versions are needed?
-
-Your README should make it easy for someone to understand what you did and run your code.
-
-## Peer Review Process
-
-You'll be assigned two classmates' repositories to review. Provide your feedback through **pull requests**:
-
-1. Clone your assigned classmate's repository to your machine
-2. Read through their notebooks, scripts, and documentation
-3. Try running the code yourself
-4. Create a pull request with inline comments on their code/analysis
-5. In the PR description, provide overall feedback addressing:
-   - What worked well conceptually and technically?
-   - What could be clearer in the documentation or analysis?
-   - Specific suggestions for deeper analysis or improvements
-   - Overall strengths of the project
-
-Be constructive and specific. Good peer reviews identify both strengths and areas for growth.
-
-You are *not* grading each other's pieces, just providing feedback.
-
-## Timeline
-
-- **Friday, Feb 20**: Portfolio piece due (push your final version to this repo)
-- **Friday, Feb 27**: Peer reviews due (submit PRs with feedback to your assigned classmates' repos)
-
-## Questions?
-
-We can discuss more in class, in office hours, in discussion, and you can ask on Piazza.
+##
