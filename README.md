@@ -1,5 +1,5 @@
 # Sentiment Classification on IMDB: Classical vs Neural Models
-## Overview
+## Overview 
 
 This project compares classical machine learning approaches and lightweight neural networks for binary sentiment classification on a balanced subset of the IMDB movie review dataset.
 
